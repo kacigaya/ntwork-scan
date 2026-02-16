@@ -35,7 +35,7 @@ COMMON_VULNERABILITIES: dict[int, dict[str, str]] = {
 }
 
 
-def _resolve_hostname(ip_address: str) -> str:
+def ResolveHostname(ip_address: str) -> str:
     """Resolve an IP address to a hostname, returning 'Unknown' on failure."""
     try:
         return socket.gethostbyaddr(ip_address)[0]
@@ -43,7 +43,7 @@ def _resolve_hostname(ip_address: str) -> str:
         return "Unknown"
 
 
-def discover_devices(target_network: str, scan_type: str = "arp") -> list[dict[str, str]]:
+def DiscoverDevices(target_network: str, scan_type: str = "arp") -> list[dict[str, str]]:
     """Discover devices on the network using ARP or PING scanning.
 
     Args:
@@ -64,7 +64,7 @@ def discover_devices(target_network: str, scan_type: str = "arp") -> list[dict[s
             device = {
                 "ip": element[1].psrc,
                 "mac": element[1].hwsrc,
-                "hostname": _resolve_hostname(element[1].psrc),
+                "hostname": ResolveHostname(element[1].psrc),
             }
             devices.append(device)
 
@@ -80,7 +80,7 @@ def discover_devices(target_network: str, scan_type: str = "arp") -> list[dict[s
                     devices.append({
                         "ip": str(ip),
                         "mac": mac,
-                        "hostname": _resolve_hostname(str(ip)),
+                        "hostname": ResolveHostname(str(ip)),
                     })
             except OSError as e:
                 logger.warning("Error scanning %s: %s", ip, e)
@@ -88,7 +88,7 @@ def discover_devices(target_network: str, scan_type: str = "arp") -> list[dict[s
     return devices
 
 
-def scan_ports(ip_address: str, port_range: str) -> list[dict[str, Any]]:
+def ScanPorts(ip_address: str, port_range: str) -> list[dict[str, Any]]:
     """Scan ports on a target IP address using nmap.
 
     Args:
@@ -120,11 +120,11 @@ def scan_ports(ip_address: str, port_range: str) -> list[dict[str, Any]]:
         return []
 
 
-def basic_vulnerability_check(open_ports: list[dict[str, Any]]) -> list[dict[str, str]]:
+def BasicVulnerabilityCheck(open_ports: list[dict[str, Any]]) -> list[dict[str, str]]:
     """Check open ports against a database of common vulnerabilities.
 
     Args:
-        open_ports: List of open port dictionaries from scan_ports().
+        open_ports: List of open port dictionaries from ScanPorts().
 
     Returns:
         A list of vulnerability dictionaries with description and severity.
@@ -137,11 +137,11 @@ def basic_vulnerability_check(open_ports: list[dict[str, Any]]) -> list[dict[str
     return vulnerabilities
 
 
-def generate_report(devices: list[dict[str, str]], port_range: str) -> list[dict[str, Any]]:
+def GenerateReport(devices: list[dict[str, str]], port_range: str) -> list[dict[str, Any]]:
     """Generate a full scan report for all discovered devices.
 
     Args:
-        devices: List of device dictionaries from discover_devices().
+        devices: List of device dictionaries from DiscoverDevices().
         port_range: Port range string to scan on each device.
 
     Returns:
@@ -150,14 +150,14 @@ def generate_report(devices: list[dict[str, str]], port_range: str) -> list[dict
     report: list[dict[str, Any]] = []
     for device in devices:
         device_report: dict[str, Any] = device.copy()
-        open_ports = scan_ports(device["ip"], port_range)
+        open_ports = ScanPorts(device["ip"], port_range)
         device_report["open_ports"] = open_ports
-        device_report["vulnerabilities"] = basic_vulnerability_check(open_ports)
+        device_report["vulnerabilities"] = BasicVulnerabilityCheck(open_ports)
         report.append(device_report)
     return report
 
 
-def save_report(report: list[dict[str, Any]], output_file: str, output_format: str) -> bool:
+def SaveReport(report: list[dict[str, Any]], output_file: str, output_format: str) -> bool:
     """Save the scan report to a file in the specified format.
 
     Args:
@@ -219,7 +219,7 @@ def save_report(report: list[dict[str, Any]], output_file: str, output_format: s
     return True
 
 
-def main() -> None:
+def Main() -> None:
     """Entry point for the ntwork-scan command-line tool."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
@@ -231,13 +231,13 @@ def main() -> None:
     parser.add_argument("-f", "--format", dest="output_format", default="json", choices=["json", "csv", "txt"], help="Output format (default: json)")
     args = parser.parse_args()
 
-    devices = discover_devices(args.target_network, args.scan_type)
-    report = generate_report(devices, args.port_range)
-    if save_report(report, args.output_file, args.output_format):
+    devices = DiscoverDevices(args.target_network, args.scan_type)
+    report = GenerateReport(devices, args.port_range)
+    if SaveReport(report, args.output_file, args.output_format):
         logger.info("Scan complete. Report saved to %s", args.output_file)
     else:
         logger.error("Failed to save report.")
 
 
 if __name__ == "__main__":
-    main()
+    Main()
