@@ -39,7 +39,7 @@ def _resolve_hostname(ip_address: str) -> str:
     """Resolve an IP address to a hostname, returning 'Unknown' on failure."""
     try:
         return socket.gethostbyaddr(ip_address)[0]
-    except socket.herror:
+    except OSError:
         return "Unknown"
 
 
