@@ -25,4 +25,4 @@ dependencies = [
 ]
 
 [project.scripts]
-ntwork-scan = "ntwork_scan:main"
+ntwork-scan = "ntwork_scan:Main"
