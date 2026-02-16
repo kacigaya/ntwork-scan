@@ -35,7 +35,7 @@ COMMON_VULNERABILITIES: dict[int, dict[str, str]] = {
 }
 
 
-def ResolveHostname(ip_address: str) -> str:
+def _ResolveHostname(ip_address: str) -> str:
     """Resolve an IP address to a hostname, returning 'Unknown' on failure."""
     try:
         return socket.gethostbyaddr(ip_address)[0]
@@ -64,7 +64,7 @@ def DiscoverDevices(target_network: str, scan_type: str = "arp") -> list[dict[st
             device = {
                 "ip": element[1].psrc,
                 "mac": element[1].hwsrc,
-                "hostname": ResolveHostname(element[1].psrc),
+                "hostname": _ResolveHostname(element[1].psrc),
             }
             devices.append(device)
 
@@ -80,7 +80,7 @@ def DiscoverDevices(target_network: str, scan_type: str = "arp") -> list[dict[st
                     devices.append({
                         "ip": str(ip),
                         "mac": mac,
-                        "hostname": ResolveHostname(str(ip)),
+                        "hostname": _ResolveHostname(str(ip)),
                     })
             except OSError as e:
                 logger.warning("Error scanning %s: %s", ip, e)
